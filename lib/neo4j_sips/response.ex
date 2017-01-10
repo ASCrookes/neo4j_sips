@@ -30,7 +30,7 @@ defmodule Neo4j.Sips.Response do
     if (length(errors) > 0) do
       {:error, errors}
     else
-      {:ok, sip["results"] |> Enum.map(&format_response(&1, row_or_graph)) |> List.first}
+      {:ok, sip["results"] |> Enum.map(&format_response(&1, row_or_graph))}
     end
   end
 

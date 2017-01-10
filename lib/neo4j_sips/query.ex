@@ -23,9 +23,14 @@ defmodule Neo4j.Sips.Query do
         conn.options[:resultDataContents]
       end || nil
 
-    query_response(response, options)
+    row_type =
+      if conn.options && Map.has_key?(conn.options, :row_type) do
+        conn.options[:row_type]
+      end || :single
+
+    query_response(response, row_type, options)
   end
-    
+
 
   def query!(conn, statement),  do: query(conn,statement) |> do_query!
   def query!(conn, statement, params) when is_map(params) do
@@ -38,13 +43,16 @@ defmodule Neo4j.Sips.Query do
     end
   end
 
-  defp query_response(response, options) do
+  defp query_response(response, row_type, options) do
     if options do
       Response.to_options(response, options)
     else
       case Response.to_rows(response) do
         {:error, reason} -> {:error, reason}
-        {:ok, rows} -> {:ok, rows}
+        {:ok, rows} ->
+          single_row? = row_type == nil or row_type == :single
+          rows = if single_row?, do: List.first(rows), else: rows
+          {:ok, rows}
       end
     end
   end
